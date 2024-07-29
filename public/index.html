@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+</head>
+<body>
+  <div id="auth-message"></div>
+  <div>
+    <input type="text" id="username" placeholder="Username">
+    <input type="text" id="message" placeholder="Message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+  <div id="chat"></div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+  <script>
+    // Function to get cookie value by name
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Check for 'a_token' cookie
+    const token = getCookie('a_token');
+    if (!token) {
+      document.getElementById('auth-message').innerText = 'No authentication token found. Please log in.';
+    } else {
+      // Initialize socket connection with the token
+      const socket = io('/chat', {
+        extraHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      socket.on('receiveMessage', (data) => {
+        const chat = document.getElementById('chat');
+        const messageElement = document.createElement('p');
+        messageElement.innerText = `${data.sender}: ${data.message}`;
+        chat.appendChild(messageElement);
+      });
+
+      function sendMessage() {
+        console.log("connected");
+        const username = document.getElementById('username').value;
+        const message = document.getElementById('message').value;
+        socket.emit('sendMessage', { sender: username, message: message });
+      }
+    }
+  </script>
+</body>
+</html>
